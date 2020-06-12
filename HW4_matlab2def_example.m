@@ -38,6 +38,12 @@ ys = y(:,1);  % we only process one of two channels between both are very simila
 ys_fft = fft(ys);
 
 %%% Filter
+
+%b_lpf = fir1(64, 0.5*10^3/(Fs/2)); 
+%since human's sensitivity  of sound @different freq is different, lpf with
+%cutoff freq @ 10k is sensible forhuman ears but can't be plot clearly via
+%matlab, so i changed it to 1K just for plotting
+
 b_lpf = fir1(64, 10*10^3/(Fs/2));  % LPF  (the cutoff freqency is at 10kHz in this case (i.e., -6dB reduction relative to the passband)
 b_hpf = fir1(64, 0.5*10^3/(Fs/2),'high');  % HPF (the cutoff frequency is 1kHz (-6dB). 
 
@@ -56,6 +62,47 @@ title('High-pass filtering')
 ys_lpf_fil = conv(ys,b_lpf,'same');  % use 'same' is to make sure the output data length is the same as the input.
 %HPF
 %%%%% Please write your code for HPF.
+ys_hpf_fil = conv(ys, b_hpf, 'same');
+
+
+%plot fft of two sound after filter
+figure(3)
+f = 0:Fs/length(fft(ys)):Fs;
+if(length(f) ~= length(fft(ys)))
+    f(length(f)) = [];
+end
+subplot(3, 1, 1); semilogx(f, abs(fft(ys))); xlim([20, Fs/2]); ylim([0, max(abs(fft(ys)))]); title('original');
+
+
+
+f = 0:Fs/length(fft(ys_lpf_fil)):Fs;
+if(length(f) ~= length(fft(ys_lpf_fil)))
+    f(length(f)) = [];
+end
+subplot(3, 1, 2); 
+semilogx(f, abs(fft(ys))); 
+hold on;
+semilogx(f, abs(fft(ys_lpf_fil))); xlim([20, Fs/2]); ylim([0, max(abs(fft(ys)))]); title('lpf');
+hold off;
+
+
+
+f = 0:Fs/length(fft(ys_hpf_fil)):Fs;
+if(length(f) ~= length(fft(ys_hpf_fil)))
+    f(length(f)) = [];
+end
+
+subplot(3, 1, 3);
+semilogx(f, abs(fft(ys))); 
+hold on;
+semilogx(f, abs(fft(ys_hpf_fil))); xlim([20, Fs/2]); ylim([0, max(abs(fft(ys)))]); title('hpf');
+hold off;
+
+
+
+%sound(ys_lpf_fil, Fs)
+audiowrite('lpf_0710807.ogg', ys_lpf_fil, Fs);
+audiowrite('hpf_0710807.ogg', ys_hpf_fil, Fs);
 
 %%% Downsampling by ds
 ds = 2;
@@ -64,5 +111,6 @@ ys_fil_ds = ys_lpf_fil(1:ds:end); % Use the LPF result before doing downsampling
 
 
 %%% Save data 
-filename = 'processed_downsampling2.ogg'; 
+filename = 'ds2_0710807.ogg'; 
 audiowrite(filename,ys_fil_ds,Fs/ds)
+
